@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020", // Modern target for service workers
+    "module": "ES2020", // Using ES modules
+    "outDir": ".", // Output to root directory (background.js)
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["ES2020", "WebWorker"], // Service workers don't have DOM access directly
+    "types": ["chrome"], // Include Chrome API types
+    "resolveJsonModule": true
+  },
+  "include": [
+    "src/background.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/ui"
+  ]
+}

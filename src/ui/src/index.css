@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* You can keep some of the Vite default styles if you like, or remove them.
+   For a cleaner start with Shadcn UI, it's often better to rely on Tailwind's resets (via @tailwind base)
+   and what Shadcn UI provides.
+*/
+
+/* Example: Keep basic body styling for dark/light mode if desired, or remove for full Tailwind control */
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark; /* This is good for respecting user OS preference */
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  /* Shadcn UI often assumes you'll control background colors via components,
+     but a default can be set here if needed. */
+  /* background-color: hsl(var(--background)); */ /* Example if using Shadcn's CSS vars */
+  /* color: hsl(var(--foreground)); */ /* Example if using Shadcn's CSS vars */
+}

@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020", // Content scripts can use modern JS
+    "module": "ES2020", // ES modules
+    "outDir": ".",    // Output to root directory (content.js)
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"], // Content scripts have DOM access
+    "types": ["chrome"], // Include Chrome API types
+    "resolveJsonModule": true
+  },
+  "include": [
+    "src/content.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/ui"
+  ]
+}

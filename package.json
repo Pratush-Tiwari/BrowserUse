@@ -1,0 +1,17 @@
+{
+  "name": "blurmy-extension",
+  "version": "0.1.0",
+  "description": "Browser extension to automatically fill job application forms.",
+  "private": true,
+  "scripts": {
+    "build:background": "tsc --project tsconfig.background.json --outDir .",
+    "build:content": "tsc --project tsconfig.content.json --outDir .",
+    "build:ui": "cd src/ui && npm run build",
+    "build": "npm run build:background && npm run build:content && npm run build:ui",
+    "dev:ui": "cd src/ui && npm run dev"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3", // Or a version compatible with src/ui
+    "@types/chrome": "^0.0.268" // For Chrome extension API types
+  }
+}

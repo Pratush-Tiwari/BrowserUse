@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Blurmy",
+  "version": "0.1.0",
+  "description": "Intelligently fills job application forms.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "contextMenus",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Blurmy"
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon16.png",  // Replace with actual icons
+    "48": "icons/icon48.png",  // Replace with actual icons
+    "128": "icons/icon128.png" // Replace with actual icons
+  }
+}

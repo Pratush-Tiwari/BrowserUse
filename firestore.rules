@@ -1,0 +1,24 @@
+// Firestore Security Rules for Blurmy
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User Profiles:
+    // Each user has a document in the 'profiles' collection,
+    // keyed by their UID.
+    // Users can only read and write their own profile.
+    match /profiles/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // No one should be able to list all profiles
+      allow list: if false;
+    }
+
+    // Add other collections and their rules here if needed in the future.
+    // For example, if you store user-specific settings separately:
+    // match /settings/{userId} {
+    //   allow read, write: if request.auth != null && request.auth.uid == userId;
+    // }
+  }
+}
