@@ -117,7 +117,7 @@ npm run clean
 
 1. Load the extension in Chrome
 2. Navigate to any website with forms
-3. Right-click and select "Fill with Blurmy"
+3. Right-click and select "Fill with Blurmy Ai"
 4. Check the browser console for content script logs
 5. Look for notifications that appear on the page
 

@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // TESTING RULES - More permissive for debugging
+    // WARNING: Only use these for development/testing
+    
+    // Allow authenticated users to read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to read/write any data (for testing)
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+} 

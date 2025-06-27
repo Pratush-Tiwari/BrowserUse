@@ -21,7 +21,7 @@ Blurmy is a powerful browser extension that automates the process of filling out
 
 ### 🤖 Intelligent Form Filling
 
-- Context menu integration ("Fill with Blurmy")
+- Context menu integration ("Fill with Blurmy Ai")
 - Smart field matching based on field names and IDs
 - Automatic form detection and filling
 - Configurable fill delay to avoid detection
@@ -90,7 +90,7 @@ Blurmy is a powerful browser extension that automates the process of filling out
 
 1. Navigate to any job application form
 2. Right-click on the page
-3. Select "Fill with Blurmy" from the context menu
+3. Select "Fill with Blurmy Ai" from the context menu
 4. The extension will automatically fill matching fields
 5. Review and submit the form
 

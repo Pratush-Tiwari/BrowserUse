@@ -11,8 +11,8 @@ import {
 } from "./components/ui/card";
 import { Switch } from "./components/ui/switch";
 import { Separator } from "./components/ui/separator";
-import { auth } from "../lib/firebase";
-import { signOut, onAuthStateChanged, User } from "firebase/auth";
+import { auth, signOutUser } from "../lib/firebase";
+import { onAuthStateChanged, User } from "firebase/auth";
 
 interface ExtensionSettings {
   autoFill: boolean;
@@ -51,7 +51,7 @@ const Options: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
+      await signOutUser();
     } catch (error) {
       console.error("Error signing out:", error);
     }

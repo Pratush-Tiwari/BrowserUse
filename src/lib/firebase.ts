@@ -6,6 +6,10 @@ import {
   signOut,
   onAuthStateChanged,
   User,
+  setPersistence,
+  browserLocalPersistence,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
 } from "firebase/auth";
 import {
   getFirestore,
@@ -31,10 +35,18 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase services
 export const auth = getAuth(app);
+
+// Set persistence for browser extension context
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error("Error setting auth persistence:", error);
+});
+
 export const db = getFirestore(app);
 
 // Google Auth Provider
 const googleProvider = new GoogleAuthProvider();
+googleProvider.addScope("profile");
+googleProvider.addScope("email");
 
 // Authentication functions
 export const signInWithGoogle = async () => {
@@ -43,6 +55,26 @@ export const signInWithGoogle = async () => {
     return result.user;
   } catch (error) {
     console.error("Error signing in with Google:", error);
+    throw error;
+  }
+};
+
+export const signInWithEmail = async (email: string, password: string) => {
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    return result.user;
+  } catch (error) {
+    console.error("Error signing in with email:", error);
+    throw error;
+  }
+};
+
+export const signUpWithEmail = async (email: string, password: string) => {
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    return result.user;
+  } catch (error) {
+    console.error("Error signing up with email:", error);
     throw error;
   }
 };
@@ -124,6 +156,46 @@ export const updateUserProfile = async (
   } catch (error) {
     console.error("Error updating user profile:", error);
     throw error;
+  }
+};
+
+export const debugFirebaseAuth = () => {
+  console.log("Firebase Auth Debug Info:");
+  console.log("Current User:", auth.currentUser);
+  console.log("Auth State:", auth);
+  console.log("Firebase Config:", firebaseConfig);
+  console.log("Is Auth Ready:", auth);
+
+  // Test if we can access Firebase services
+  try {
+    const testDoc = doc(db, "test", "test");
+    console.log("Firestore connection test:", testDoc);
+  } catch (error) {
+    console.error("Firestore connection error:", error);
+  }
+};
+
+export const testFirebaseWrite = async () => {
+  if (!auth.currentUser) {
+    console.error("No authenticated user");
+    return false;
+  }
+
+  try {
+    console.log("Testing Firebase write permissions...");
+    const testDoc = doc(db, "users", auth.currentUser.uid);
+    const testData = {
+      test: true,
+      timestamp: new Date(),
+      uid: auth.currentUser.uid,
+    };
+
+    await setDoc(testDoc, testData);
+    console.log("Firebase write test successful");
+    return true;
+  } catch (error) {
+    console.error("Firebase write test failed:", error);
+    return false;
   }
 };
 

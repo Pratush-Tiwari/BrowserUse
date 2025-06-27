@@ -11,14 +11,16 @@ import {
 } from "./components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Separator } from "./components/ui/separator";
-import { auth, db } from "../lib/firebase";
 import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  User,
-} from "firebase/auth";
+  auth,
+  db,
+  signInWithEmail,
+  signUpWithEmail,
+  signOutUser,
+  debugFirebaseAuth,
+  testFirebaseWrite,
+} from "../lib/firebase";
+import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 interface UserProfile {
@@ -36,6 +38,7 @@ const Popup: React.FC = () => {
   const [authError, setAuthError] = useState("");
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
 
   // Auth form states
@@ -55,24 +58,53 @@ const Popup: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  // Debug effect to log profile changes
+  useEffect(() => {
+    console.log("Profile state changed:", profile);
+    console.log("Is editing:", isEditing);
+  }, [profile, isEditing]);
+
   const loadUserProfile = async (userId: string) => {
     try {
+      console.log("Loading profile for user:", userId);
       const docRef = doc(db, "users", userId);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
+        console.log("Profile found in Firestore:", docSnap.data());
         setProfile(docSnap.data() as UserProfile);
       } else {
-        // Create default profile
+        console.log("No profile found, creating default profile");
+        // Create default profile with user's email
         const defaultProfile: UserProfile = {
           email: user?.email || "",
           rawProfileData: "",
           apiKey: "",
         };
         setProfile(defaultProfile);
+
+        // Optionally save the default profile to Firestore
+        try {
+          await setDoc(docRef, {
+            ...defaultProfile,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          console.log("Default profile saved to Firestore");
+        } catch (saveError) {
+          console.error("Error saving default profile:", saveError);
+          // Don't throw here - we still want to show the profile even if save fails
+        }
       }
     } catch (error) {
       console.error("Error loading profile:", error);
+      // Create a fallback profile even if there's an error
+      const fallbackProfile: UserProfile = {
+        email: user?.email || "",
+        rawProfileData: "",
+        apiKey: "",
+      };
+      setProfile(fallbackProfile);
     }
   };
 
@@ -87,18 +119,36 @@ const Popup: React.FC = () => {
 
     try {
       if (authMode === "login") {
-        await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmail(email, password);
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        await signUpWithEmail(email, password);
       }
     } catch (error: any) {
-      setAuthError(error.message);
+      console.error("Authentication error:", error);
+      // Provide more user-friendly error messages
+      if (error.code === "auth/user-not-found") {
+        setAuthError("No account found with this email address");
+      } else if (error.code === "auth/wrong-password") {
+        setAuthError("Incorrect password");
+      } else if (error.code === "auth/email-already-in-use") {
+        setAuthError("An account with this email already exists");
+      } else if (error.code === "auth/weak-password") {
+        setAuthError("Password should be at least 6 characters");
+      } else if (error.code === "auth/invalid-email") {
+        setAuthError("Please enter a valid email address");
+      } else if (error.code === "auth/popup-closed-by-user") {
+        setAuthError("Login was cancelled");
+      } else {
+        setAuthError(
+          error.message || "Authentication failed. Please try again."
+        );
+      }
     }
   };
 
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
+      await signOutUser();
       setProfile(null);
     } catch (error) {
       console.error("Error signing out:", error);
@@ -106,17 +156,47 @@ const Popup: React.FC = () => {
   };
 
   const saveProfile = async () => {
-    if (!user || !profile) return;
+    if (!user || !profile) {
+      console.error("Cannot save profile: user or profile is null", {
+        user,
+        profile,
+      });
+      return;
+    }
 
+    setIsSaving(true);
     try {
+      console.log("Attempting to save profile for user:", user.uid);
+      console.log("Profile data to save:", profile);
+
       const docRef = doc(db, "users", user.uid);
       await setDoc(docRef, {
         ...profile,
         updatedAt: new Date(),
       });
       setIsEditing(false);
-    } catch (error) {
+      console.log("Profile saved successfully");
+    } catch (error: any) {
       console.error("Error saving profile:", error);
+
+      // Provide more specific error messages
+      let errorMessage = "Failed to save profile. Please try again.";
+
+      if (error.code === "permission-denied") {
+        errorMessage =
+          "Permission denied. Please check your Firebase security rules.";
+      } else if (error.code === "unavailable") {
+        errorMessage =
+          "Firebase is unavailable. Please check your internet connection.";
+      } else if (error.code === "unauthenticated") {
+        errorMessage = "You are not authenticated. Please log in again.";
+      } else if (error.message) {
+        errorMessage = `Save failed: ${error.message}`;
+      }
+
+      alert(errorMessage);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -250,15 +330,28 @@ const Popup: React.FC = () => {
                     relevant data when filling forms.
                   </CardDescription>
                 </div>
-                <Button
-                  variant={isEditing ? "default" : "outline"}
-                  size="sm"
-                  onClick={() =>
-                    isEditing ? saveProfile() : setIsEditing(true)
-                  }
-                >
-                  {isEditing ? "Save" : "Edit"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant={isEditing ? "default" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      isEditing ? saveProfile() : setIsEditing(true)
+                    }
+                    disabled={isSaving}
+                  >
+                    {isEditing ? (isSaving ? "Saving..." : "Save") : "Edit"}
+                  </Button>
+                  {isEditing && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditing(false)}
+                      disabled={isSaving}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -314,6 +407,54 @@ const Popup: React.FC = () => {
               <CardDescription>Configure how Blurmy works</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div>
+                <Label>Debug Firebase</Label>
+                <p className="text-sm text-gray-600 mb-2">
+                  Test Firebase connection and authentication
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    debugFirebaseAuth();
+                    console.log(
+                      "Debug info logged to console. Check browser dev tools."
+                    );
+                  }}
+                >
+                  Debug Firebase
+                </Button>
+              </div>
+
+              <Separator />
+
+              <div>
+                <Label>Test Firebase Write</Label>
+                <p className="text-sm text-gray-600 mb-2">
+                  Test if you can write to Firestore
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={async () => {
+                    const result = await testFirebaseWrite();
+                    if (result) {
+                      alert("Firebase write test successful!");
+                    } else {
+                      alert(
+                        "Firebase write test failed. Check console for details."
+                      );
+                    }
+                  }}
+                >
+                  Test Write Permission
+                </Button>
+              </div>
+
+              <Separator />
+
               <div>
                 <Label>Auto-fill Forms</Label>
                 <p className="text-sm text-gray-600 mb-2">

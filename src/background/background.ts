@@ -5,7 +5,7 @@ import { doc, getDoc } from "firebase/firestore";
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "fillWithBlurmy",
-    title: "Fill with Blurmy",
+    title: "Fill with Blurmy Ai",
     contexts: ["page"],
   });
 });
